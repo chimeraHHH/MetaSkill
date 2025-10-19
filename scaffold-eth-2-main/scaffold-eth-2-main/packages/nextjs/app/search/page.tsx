@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { NextPage } from "next";
 import { useRouter, useSearchParams } from "next/navigation";
-import { HeartIcon, LanguageIcon, Squares2X2Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { HeartIcon, LanguageIcon, Squares2X2Icon, XMarkIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useSkillFavorites } from "~~/hooks/useSkillFavorites";
 import { useSearchHistory } from "~~/hooks/useSearchHistory";
@@ -255,16 +255,19 @@ const SearchPage: NextPage = () => {
           className="bg-base-100 rounded-2xl shadow-sm p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
         >
           <div className="flex-1 join">
+            <span className="join-item btn btn-square btn-ghost pointer-events-none">
+              <MagnifyingGlassIcon className="w-5 h-5" />
+            </span>
             <input
               className="input input-bordered join-item w-full"
-              placeholder="搜索技能包（例如：DeFi 分析）"
+              placeholder="搜索 Meta Skill"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
-            <button className="btn btn-primary join-item" type="submit">
-              搜索
-            </button>
           </div>
+          <button className="btn btn-primary" type="submit">
+            开始探索
+          </button>
           <div className="flex items-center gap-3">
             <label className="text-sm opacity-70">排序</label>
             <select
