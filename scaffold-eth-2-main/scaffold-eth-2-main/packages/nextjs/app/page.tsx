@@ -31,7 +31,7 @@ const Home: NextPage = () => {
       <header className="border-b border-base-300 bg-base-100/60 backdrop-blur sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">SkillChain</h1>
+            <h1 className="text-2xl font-bold">MetaSkill</h1>
             <p className="text-sm opacity-70">去中心化 AI 技能市场</p>
           </div>
           <div className="flex items-center gap-3">
@@ -55,7 +55,7 @@ const Home: NextPage = () => {
           </div>
           <h2 className="text-4xl font-bold">发现、收藏、交易 AI 技能包</h2>
           <p className="text-base opacity-80 max-w-2xl mx-auto">
-            SkillChain 让每个创作者把 AI 能力资产化，用户可以随时浏览灵感广场，搜索想要的技能包，或通过链上交易快速获取。
+            MetaSkill 让每个创作者把 AI 能力资产化，用户可以随时浏览灵感广场，搜索想要的技能包，或通过链上交易快速获取。
           </p>
           <form onSubmit={handleSearch} className="max-w-3xl mx-auto flex gap-3">
             <div className="flex-1 join">
@@ -64,7 +64,7 @@ const Home: NextPage = () => {
               </span>
               <input
                 className="input input-bordered join-item w-full"
-                placeholder="找找你想要的技能包"
+                placeholder="搜索 Meta Skill"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />

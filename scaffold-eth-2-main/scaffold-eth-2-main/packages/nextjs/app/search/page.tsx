@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { NextPage } from "next";
 import { useRouter, useSearchParams } from "next/navigation";
-import { HeartIcon, Squares2X2Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { HeartIcon, LanguageIcon, Squares2X2Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useSkillFavorites } from "~~/hooks/useSkillFavorites";
 import { useSearchHistory } from "~~/hooks/useSearchHistory";
@@ -234,9 +234,18 @@ const SearchPage: NextPage = () => {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold">Skill Search</h1>
-            <p className="text-sm opacity-70">Find the right skills and complete on-chain purchases in seconds.</p>
+            <p className="text-sm opacity-70">寻找合适的技能并在几秒内完成链上购买。</p>
           </div>
-          <RainbowKitCustomConnectButton />
+          <div className="flex items-center gap-3">
+            <button
+              className="btn btn-ghost btn-sm"
+              type="button"
+            >
+              <LanguageIcon className="w-4 h-4" />
+              <span>中文</span>
+            </button>
+            <RainbowKitCustomConnectButton />
+          </div>
         </div>
       </header>
 
@@ -248,27 +257,27 @@ const SearchPage: NextPage = () => {
           <div className="flex-1 join">
             <input
               className="input input-bordered join-item w-full"
-              placeholder="Search skills (e.g. DeFi analytics)"
+              placeholder="搜索技能包（例如：DeFi 分析）"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
             <button className="btn btn-primary join-item" type="submit">
-              Search
+              搜索
             </button>
           </div>
           <div className="flex items-center gap-3">
-            <label className="text-sm opacity-70">Sort</label>
+            <label className="text-sm opacity-70">排序</label>
             <select
               className="select select-bordered select-sm"
               value={sortOption}
               onChange={e => setSortOption(e.target.value as SortOption)}
             >
-              <option value="relevance">Relevance</option>
-              <option value="popular">Popularity</option>
-              <option value="priceLow">Price: low to high</option>
-              <option value="priceHigh">Price: high to low</option>
-              <option value="createdNewest">Newest</option>
-              <option value="createdOldest">Oldest</option>
+              <option value="relevance">相关性</option>
+              <option value="popular">热门程度</option>
+              <option value="priceLow">价格：从低到高</option>
+              <option value="priceHigh">价格：从高到低</option>
+              <option value="createdNewest">最新发布</option>
+              <option value="createdOldest">最早发布</option>
             </select>
           </div>
         </form>
@@ -276,9 +285,9 @@ const SearchPage: NextPage = () => {
         {history.length > 0 && (
           <div className="bg-base-100 rounded-2xl shadow-sm p-4">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium">Recent searches</span>
+              <span className="text-sm font-medium">最近搜索</span>
               <button className="btn btn-ghost btn-xs" type="button" onClick={clearHistory}>
-                Clear
+                清除
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -298,14 +307,14 @@ const SearchPage: NextPage = () => {
 
         <section className="bg-base-100 rounded-2xl shadow-sm p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Filters</h2>
+            <h2 className="text-lg font-semibold">筛选</h2>
             <button className="btn btn-ghost btn-xs" type="button" onClick={resetFilters}>
-              Reset
-            </button>
+                重置
+              </button>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="form-control">
-              <label className="label"><span className="label-text">Min price (ETH)</span></label>
+              <label className="label"><span className="label-text">最低价格 (ETH)</span></label>
               <input
                 className="input input-bordered input-sm"
                 type="number"
@@ -316,7 +325,7 @@ const SearchPage: NextPage = () => {
               />
             </div>
             <div className="form-control">
-              <label className="label"><span className="label-text">Max price (ETH)</span></label>
+              <label className="label"><span className="label-text">最高价格 (ETH)</span></label>
               <input
                 className="input input-bordered input-sm"
                 type="number"
@@ -327,7 +336,7 @@ const SearchPage: NextPage = () => {
               />
             </div>
             <div className="form-control">
-              <label className="label"><span className="label-text">Created from</span></label>
+              <label className="label"><span className="label-text">创建日期从</span></label>
               <input
                 className="input input-bordered input-sm"
                 type="date"
@@ -336,7 +345,7 @@ const SearchPage: NextPage = () => {
               />
             </div>
             <div className="form-control">
-              <label className="label"><span className="label-text">Created to</span></label>
+              <label className="label"><span className="label-text">创建日期至</span></label>
               <input
                 className="input input-bordered input-sm"
                 type="date"
@@ -347,37 +356,37 @@ const SearchPage: NextPage = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm font-medium">Listing status:</span>
+            <span className="text-sm font-medium">上架状态：</span>
             <div className="join">
               <button
                 type="button"
                 className={`btn btn-xs join-item ${statusFilter === "all" ? "btn-primary" : "btn-outline"}`}
                 onClick={() => setStatusFilter("all")}
               >
-                All
+                全部
               </button>
               <button
                 type="button"
                 className={`btn btn-xs join-item ${statusFilter === "listed" ? "btn-primary" : "btn-outline"}`}
                 onClick={() => setStatusFilter("listed")}
               >
-                Listed
+                已上架
               </button>
               <button
                 type="button"
                 className={`btn btn-xs join-item ${statusFilter === "unlisted" ? "btn-primary" : "btn-outline"}`}
                 onClick={() => setStatusFilter("unlisted")}
               >
-                Unlisted
+                未上架
               </button>
             </div>
           </div>
 
           <div>
-            <span className="text-sm font-medium">Categories:</span>
+            <span className="text-sm font-medium">分类：</span>
             <div className="mt-2 flex flex-wrap gap-2">
               {availableCategories.length === 0 ? (
-                <span className="text-xs opacity-60">No categories available yet. Add categories when creating skills.</span>
+                <span className="text-xs opacity-60">暂无可用分类。创建技能时可添加分类。</span>
               ) : (
                 availableCategories.map(value => {
                   const checked = selectedCategories.includes(value);
@@ -401,16 +410,16 @@ const SearchPage: NextPage = () => {
           <div className="flex items-center gap-2">
             <Squares2X2Icon className="w-5 h-5" />
             <p className="text-sm">
-              Found <span className="font-semibold">{displayed.length}</span> skills
+              找到 <span className="font-semibold">{displayed.length}</span> 个技能包
               {searchTerms.length > 0 ? (
-                <span className="opacity-70"> (keywords: {searchTerms.join(", ")})</span>
+                <span className="opacity-70"> (关键词: {searchTerms.join(", ")})</span>
               ) : (
-                <span className="opacity-70"> (recommended)</span>
+                <span className="opacity-70"> (推荐)</span>
               )}
             </p>
           </div>
           <Link href="/skills/market" className="btn btn-link btn-sm">
-            Browse marketplace
+            浏览市场
           </Link>
         </div>
 
@@ -420,8 +429,8 @@ const SearchPage: NextPage = () => {
           </div>
         ) : displayed.length === 0 ? (
           <div className="bg-base-100 rounded-2xl border border-dashed border-base-300 py-16 text-center">
-            <p className="text-base font-medium mb-2">No skills matched your filters</p>
-            <p className="text-sm opacity-70">Try updating the filters or using different keywords.</p>
+            <p className="text-base font-medium mb-2">没有找到匹配的技能包</p>
+            <p className="text-sm opacity-70">请尝试调整筛选条件或使用不同的关键词。</p>
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
