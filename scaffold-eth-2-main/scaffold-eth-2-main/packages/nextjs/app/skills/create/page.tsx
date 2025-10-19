@@ -4,8 +4,11 @@ import { useMemo, useState } from "react";
 import type { NextPage } from "next";
 import { useAccount } from "wagmi";
 import { RainbowKitCustomConnectButton, EtherInput } from "~~/components/scaffold-eth";
+import { SkillFileUpload } from "~~/components/SkillFileUpload";
+import { SkillPreview } from "~~/components/SkillPreview";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
+import { type ValidationResult } from "~~/utils/skillValidation";
 
 const pinataJwt = process.env.NEXT_PUBLIC_PINATA_JWT;
 
@@ -46,6 +49,8 @@ const CreateSkillPage: NextPage = () => {
   const [priceEth, setPriceEth] = useState("0");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+  const [rawFileContent, setRawFileContent] = useState<string>("");
 
   const priceWei = useMemo(() => {
     try {
@@ -60,6 +65,39 @@ const CreateSkillPage: NextPage = () => {
 
   const { writeContractAsync, isPending } = useScaffoldWriteContract("SkillNFT");
 
+  // 处理文件选择和验证结果
+  const handleFileSelect = async (selectedFile: File | null) => {
+    setFile(selectedFile);
+    if (selectedFile) {
+      try {
+        const content = await selectedFile.text();
+        setRawFileContent(content);
+      } catch (error) {
+        console.error('Error reading file content:', error);
+        setRawFileContent("");
+      }
+    } else {
+      setRawFileContent("");
+    }
+  };
+
+  const handleValidationResult = (result: ValidationResult | null) => {
+    setValidationResult(result);
+    
+    // 如果验证通过且有元数据，自动填充表单字段
+    if (result?.isValid && result.metadata) {
+      if (result.metadata.name && !name.trim()) {
+        setName(result.metadata.name);
+      }
+      if (result.metadata.description && !description.trim()) {
+        setDescription(result.metadata.description);
+      }
+      if (result.metadata.license && license === "CC-BY-4.0") {
+        setLicense(result.metadata.license);
+      }
+    }
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!address) {
@@ -70,13 +108,29 @@ const CreateSkillPage: NextPage = () => {
       notification.error("Please enter skill name");
       return;
     }
+    
+    // 如果有文件但验证失败，阻止提交
+    if (file && validationResult && !validationResult.isValid) {
+      notification.error("Please fix file validation errors before submitting");
+      return;
+    }
+    
     try {
       setUploading(true);
       let fileObj: any = undefined;
       if (file) {
         const content = await file.arrayBuffer();
         const b64 = arrayBufferToBase64(content);
-        fileObj = { name: file.name, type: file.type, size: file.size, base64: b64 };
+        fileObj = { 
+          name: file.name, 
+          type: file.type, 
+          size: file.size, 
+          base64: b64,
+          // 如果有验证结果，包含元数据
+          ...(validationResult?.isValid && validationResult.metadata ? {
+            metadata: validationResult.metadata
+          } : {})
+        };
       }
       const metadata = {
         name,
@@ -84,15 +138,23 @@ const CreateSkillPage: NextPage = () => {
         license,
         createdAt: new Date().toISOString(),
         skill: fileObj,
+        // 如果有验证通过的技能元数据，也包含在顶层
+        ...(validationResult?.isValid && validationResult.metadata ? {
+          skillMetadata: validationResult.metadata
+        } : {})
       };
       const tokenURI = await uploadJsonToIPFS(metadata);
       const tx = await writeContractAsync({ functionName: "mintSkill", args: [address, tokenURI, BigInt(priceWei)] });
-      notification.success(`Tx sent: ${tx}`);
+      notification.success(`Skill created successfully! Transaction: ${tx}`);
+      
+      // 重置表单
       setName("");
       setDescription("");
       setLicense("CC-BY-4.0");
       setPriceEth("0");
       setFile(null);
+      setValidationResult(null);
+      setRawFileContent("");
     } catch (err: any) {
       console.error(err);
       notification.error(err?.message || "Create failed");
@@ -102,35 +164,115 @@ const CreateSkillPage: NextPage = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Create Skill</h1>
         <RainbowKitCustomConnectButton />
       </div>
-      <form className="space-y-4" onSubmit={onSubmit}>
-        <div className="form-control">
-          <label className="label"><span className="label-text">Skill Name</span></label>
-          <input className="input input-bordered" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Image Captioning" />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* 左侧：表单 */}
+        <div className="space-y-6">
+          <form className="space-y-4" onSubmit={onSubmit}>
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">技能名称 *</span>
+              </label>
+              <input 
+                className="input input-bordered" 
+                value={name} 
+                onChange={e => setName(e.target.value)} 
+                placeholder="例如：图像描述生成" 
+                required
+              />
+            </div>
+            
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">技能描述</span>
+              </label>
+              <textarea 
+                className="textarea textarea-bordered" 
+                rows={4} 
+                value={description} 
+                onChange={e => setDescription(e.target.value)} 
+                placeholder="简要描述这个技能的功能和用途" 
+              />
+            </div>
+            
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">许可证</span>
+              </label>
+              <input 
+                className="input input-bordered" 
+                value={license} 
+                onChange={e => setLicense(e.target.value)} 
+                placeholder="例如：CC-BY-4.0" 
+              />
+            </div>
+            
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">价格 (ETH)</span>
+              </label>
+              <EtherInput 
+                name="price" 
+                value={priceEth} 
+                onChange={setPriceEth} 
+                placeholder="0.00" 
+              />
+            </div>
+            
+            <button 
+              className="btn btn-primary w-full" 
+              type="submit" 
+              disabled={isPending || uploading || (file && validationResult && !validationResult.isValid)}
+            >
+              {isPending || uploading ? (
+                <>
+                  <span className="loading loading-spinner loading-sm"></span>
+                  处理中...
+                </>
+              ) : (
+                "创建技能"
+              )}
+            </button>
+          </form>
+          
+          <div className="alert alert-info">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span className="text-sm">
+              如果未配置 IPFS，元数据将存储为 data URI，仅用于本地演示。
+            </span>
+          </div>
         </div>
-        <div className="form-control">
-          <label className="label"><span className="label-text">Description</span></label>
-          <textarea className="textarea textarea-bordered" rows={4} value={description} onChange={e => setDescription(e.target.value)} placeholder="Briefly describe the skill" />
+
+        {/* 右侧：文件上传和预览 */}
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-xl font-semibold mb-4">技能文件上传</h2>
+            <SkillFileUpload
+              onFileSelect={handleFileSelect}
+              onValidationResult={handleValidationResult}
+              disabled={uploading || isPending}
+            />
+          </div>
+          
+          {/* 技能预览 */}
+          {validationResult?.isValid && validationResult.metadata && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">技能预览</h2>
+              <SkillPreview
+                metadata={validationResult.metadata}
+                rawContent={rawFileContent}
+              />
+            </div>
+          )}
         </div>
-        <div className="form-control">
-          <label className="label"><span className="label-text">License</span></label>
-          <input className="input input-bordered" value={license} onChange={e => setLicense(e.target.value)} placeholder="e.g. CC-BY-4.0" />
-        </div>
-        <div className="form-control">
-          <label className="label"><span className="label-text">Price</span></label>
-          <EtherInput name="price" value={priceEth} onChange={setPriceEth} placeholder="0.00" />
-        </div>
-        <div className="form-control">
-          <label className="label"><span className="label-text">Skill File (optional)</span></label>
-          <input className="file-input file-input-bordered" type="file" onChange={e => setFile(e.target.files?.[0] || null)} />
-        </div>
-        <button className="btn btn-primary" type="submit" disabled={isPending || uploading}>{isPending || uploading ? "Processing..." : "Create Skill"}</button>
-      </form>
-      <p className="mt-4 text-sm opacity-70">If IPFS is not configured, metadata will be stored as a data URI for local demo only.</p>
+      </div>
     </div>
   );
 };
