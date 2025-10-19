@@ -46,11 +46,27 @@ const CreateSkillPage: NextPage = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [license, setLicense] = useState("CC-BY-4.0");
+  const [category, setCategory] = useState("tools");
+  const [tagsInput, setTagsInput] = useState("AI, Skill");
+  const [keywordsInput, setKeywordsInput] = useState("");
   const [priceEth, setPriceEth] = useState("0");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [rawFileContent, setRawFileContent] = useState<string>("");
+
+  const categories = useMemo(
+    () => [
+      { value: "tools", label: "工具" },
+      { value: "creative", label: "创意" },
+      { value: "analytics", label: "数据分析" },
+      { value: "assistant", label: "智能助理" },
+      { value: "education", label: "教育" },
+      { value: "entertainment", label: "娱乐" },
+      { value: "others", label: "其他" },
+    ],
+    [],
+  );
 
   const priceWei = useMemo(() => {
     try {
@@ -132,10 +148,19 @@ const CreateSkillPage: NextPage = () => {
           } : {})
         };
       }
+      const parseCommaList = (value: string) =>
+        value
+          .split(/[，,]/)
+          .map(item => item.trim())
+          .filter(Boolean);
+
       const metadata = {
         name,
         description,
         license,
+        category,
+        tags: parseCommaList(tagsInput),
+        keywords: parseCommaList(keywordsInput || tagsInput),
         createdAt: new Date().toISOString(),
         skill: fileObj,
         // 如果有验证通过的技能元数据，也包含在顶层
@@ -151,6 +176,9 @@ const CreateSkillPage: NextPage = () => {
       setName("");
       setDescription("");
       setLicense("CC-BY-4.0");
+      setCategory("tools");
+      setTagsInput("AI, Skill");
+      setKeywordsInput("");
       setPriceEth("0");
       setFile(null);
       setValidationResult(null);
@@ -272,10 +300,63 @@ const CreateSkillPage: NextPage = () => {
             </div>
           )}
         </div>
+<<<<<<< Updated upstream
       </div>
+=======
+        <div className="form-control">
+          <label className="label"><span className="label-text">License</span></label>
+          <input className="input input-bordered" value={license} onChange={e => setLicense(e.target.value)} placeholder="e.g. CC-BY-4.0" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="form-control">
+            <label className="label"><span className="label-text">Category</span></label>
+            <select className="select select-bordered" value={category} onChange={e => setCategory(e.target.value)}>
+              {categories.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-control">
+            <label className="label"><span className="label-text">Tags</span></label>
+            <input
+              className="input input-bordered"
+              value={tagsInput}
+              onChange={e => setTagsInput(e.target.value)}
+              placeholder="Comma separated tags"
+            />
+            <label className="label">
+              <span className="label-text-alt">例：AI, DeFi, NFT</span>
+            </label>
+          </div>
+        </div>
+        <div className="form-control">
+          <label className="label"><span className="label-text">Search Keywords (optional)</span></label>
+          <input
+            className="input input-bordered"
+            value={keywordsInput}
+            onChange={e => setKeywordsInput(e.target.value)}
+            placeholder="e.g. 自动化,营销,中文"
+          />
+          <label className="label">
+            <span className="label-text-alt">用于增强搜索匹配，多个词用逗号分隔。</span>
+          </label>
+        </div>
+        <div className="form-control">
+          <label className="label"><span className="label-text">Price</span></label>
+          <EtherInput name="price" value={priceEth} onChange={setPriceEth} placeholder="0.00" />
+        </div>
+        <div className="form-control">
+          <label className="label"><span className="label-text">Skill File (optional)</span></label>
+          <input className="file-input file-input-bordered" type="file" onChange={e => setFile(e.target.files?.[0] || null)} />
+        </div>
+        <button className="btn btn-primary" type="submit" disabled={isPending || uploading}>{isPending || uploading ? "Processing..." : "Create Skill"}</button>
+      </form>
+      <p className="mt-4 text-sm opacity-70">If IPFS is not configured, metadata will be stored as a data URI for local demo only.</p>
+>>>>>>> Stashed changes
     </div>
   );
 };
 
 export default CreateSkillPage;
-

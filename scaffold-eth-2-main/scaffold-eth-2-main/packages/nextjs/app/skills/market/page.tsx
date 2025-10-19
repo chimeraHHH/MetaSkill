@@ -4,13 +4,19 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { NextPage } from "next";
 import { useAccount } from "wagmi";
-import { formatEther } from "viem";
 import { TagIcon } from "@heroicons/react/24/outline";
 import { EtherInput, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useSkillFavorites } from "~~/hooks/useSkillFavorites";
 import { SkillItem, useSkillsData } from "~~/hooks/useSkillsData";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
+
+const formatPrice = (value: number) => {
+  if (!value) return "Free";
+  const precision = value >= 1 ? 3 : 4;
+  const trimmed = Number(value.toFixed(precision)).toString();
+  return `${trimmed} ETH`;
+};
 
 const MarketPage: NextPage = () => {
   const { address } = useAccount();
@@ -26,15 +32,15 @@ const MarketPage: NextPage = () => {
 
   const handlePurchase = async (skill: SkillItem) => {
     if (!skill.listed || skill.price <= 0n) {
-      notification.info("该技能包目前未上架或为免费资源");
+      notification.info("This skill is not listed right now");
       return;
     }
     try {
       const tx = await writeContractAsync({ functionName: "purchaseSkill", args: [skill.tokenId], value: skill.price });
-      notification.success(`交易已提交：${tx}`);
+      notification.success(`Transaction submitted: ${tx}`);
       refresh();
     } catch (error: any) {
-      notification.error(error?.shortMessage ?? error?.message ?? "购买失败");
+      notification.error(error?.shortMessage ?? error?.message ?? "Purchase failed");
     }
   };
 
@@ -44,20 +50,20 @@ const MarketPage: NextPage = () => {
       const fracPadded = (frac + "000000000000000000").slice(0, 18);
       const wei = BigInt(whole || "0") * 10n ** 18n + BigInt(fracPadded || "0");
       const tx = await writeContractAsync({ functionName: "listSkill", args: [tokenId, wei] });
-      notification.success(`已上架：${tx}`);
+      notification.success(`Listing transaction submitted: ${tx}`);
       refresh();
     } catch (error: any) {
-      notification.error(error?.shortMessage ?? error?.message ?? "上架失败");
+      notification.error(error?.shortMessage ?? error?.message ?? "Listing failed");
     }
   };
 
   const handleUnlist = async (tokenId: bigint) => {
     try {
       const tx = await writeContractAsync({ functionName: "unlistSkill", args: [tokenId] });
-      notification.success(`已下架：${tx}`);
+      notification.success(`Unlist transaction submitted: ${tx}`);
       refresh();
     } catch (error: any) {
-      notification.error(error?.shortMessage ?? error?.message ?? "下架失败");
+      notification.error(error?.shortMessage ?? error?.message ?? "Unlist failed");
     }
   };
 
@@ -66,8 +72,8 @@ const MarketPage: NextPage = () => {
       <header className="border-b border-base-300 bg-base-100/70 backdrop-blur sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">技能市场</h1>
-            <p className="text-sm opacity-70">浏览、收藏与购买链上技能包</p>
+            <h1 className="text-2xl font-bold">Skill marketplace</h1>
+            <p className="text-sm opacity-70">Browse, collect and trade on-chain skills.</p>
           </div>
           <RainbowKitCustomConnectButton />
         </div>
@@ -76,12 +82,12 @@ const MarketPage: NextPage = () => {
       <main className="max-w-6xl mx-auto px-6 py-10">
         <div className="bg-base-100 rounded-2xl shadow-sm p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
-            <h2 className="text-xl font-semibold mb-1">链上技能交易大厅</h2>
-            <p className="text-sm opacity-70">支持链上收藏、快速购买与创作者自主定价。</p>
+            <h2 className="text-xl font-semibold mb-1">On-chain trading hub</h2>
+            <p className="text-sm opacity-70">Collect favourites, buy instantly and let creators set the price.</p>
           </div>
           <div className="flex items-center gap-3">
             <label className="label cursor-pointer gap-2">
-              <span className="label-text">只看在售</span>
+              <span className="label-text">Only listed</span>
               <input
                 type="checkbox"
                 className="toggle toggle-primary"
@@ -90,7 +96,7 @@ const MarketPage: NextPage = () => {
               />
             </label>
             <Link href="/search" className="btn btn-outline btn-sm">
-              去搜索
+              Advanced search
             </Link>
           </div>
         </div>
@@ -101,10 +107,10 @@ const MarketPage: NextPage = () => {
           </div>
         ) : filtered.length === 0 ? (
           <div className="bg-base-100 border border-dashed border-base-300 rounded-2xl py-16 text-center">
-            <p className="text-base font-medium mb-2">暂无技能包</p>
-            <p className="text-sm opacity-70">试试去创建一个新的技能包，或取消筛选条件。</p>
+            <p className="text-base font-medium mb-2">No skills found</p>
+            <p className="text-sm opacity-70">Create a new skill or adjust your filters.</p>
             <Link href="/skills/create" className="btn btn-primary btn-sm mt-4">
-              我要创建
+              Create a skill
             </Link>
           </div>
         ) : (
@@ -127,7 +133,7 @@ const MarketPage: NextPage = () => {
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-sm opacity-70">
                           <TagIcon className="w-8 h-8" />
-                          暂无预览
+                          No preview
                         </div>
                       )}
                     </Link>
@@ -137,35 +143,44 @@ const MarketPage: NextPage = () => {
                       <div>
                         <h3 className="card-title text-lg">{skill.metadata?.name ?? `Skill #${skill.tokenId.toString()}`}</h3>
                         <p className="text-sm opacity-70 line-clamp-2">
-                          {skill.metadata?.description ?? "创作者还没有添加详细介绍。"}
+                          {skill.metadata?.description ?? "Creator has not provided a description yet."}
                         </p>
                       </div>
                       <button
                         className={`btn btn-ghost btn-sm ${isFavorite(skill.tokenId) ? "text-error" : ""}`}
                         onClick={() => toggleFavorite(skill.tokenId)}
                         type="button"
-                        aria-label="收藏技能包"
+                        aria-label="Toggle favourite"
                       >
                         ❤
                       </button>
                     </div>
+
+                    {skill.tags?.length ? (
+                      <div className="flex flex-wrap gap-2">
+                        {skill.tags.slice(0, 4).map(tag => (
+                          <span key={tag} className="badge badge-ghost badge-sm">#{tag}</span>
+                        ))}
+                      </div>
+                    ) : null}
+
                     <div className="flex items-center justify-between text-xs opacity-70">
-                      <span>创作者：{`${skill.creator.slice(0, 6)}...${skill.creator.slice(-4)}`}</span>
-                      <span>当前持有：{`${skill.owner.slice(0, 6)}...${skill.owner.slice(-4)}`}</span>
+                      <span>Creator: {`${skill.creator.slice(0, 6)}...${skill.creator.slice(-4)}`}</span>
+                      <span>Owner: {`${skill.owner.slice(0, 6)}...${skill.owner.slice(-4)}`}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className={`badge ${skill.listed ? "badge-primary" : "badge-ghost"}`}>
-                        {skill.listed && skill.price > 0n ? `${formatEther(skill.price)} ETH` : "未上架"}
+                        {skill.listed ? formatPrice(skill.priceEth) : "Not listed"}
                       </div>
                       <Link href={`/skills/${skill.tokenId.toString()}`} className="btn btn-link btn-xs">
-                        查看详情
+                        View details
                       </Link>
                     </div>
 
                     {isOwner ? (
                       skill.listed ? (
                         <button className="btn btn-warning btn-sm" type="button" disabled={isPending} onClick={() => handleUnlist(skill.tokenId)}>
-                          {isPending ? "处理中..." : "下架"}
+                          {isPending ? "Processing..." : "Unlist"}
                         </button>
                       ) : (
                         <ListControl tokenId={skill.tokenId} onList={handleList} disabled={isPending} />
@@ -177,12 +192,12 @@ const MarketPage: NextPage = () => {
                         disabled={isPending || !skill.listed || skill.price <= 0n}
                         onClick={() => handlePurchase(skill)}
                       >
-                        {isPending ? "处理中..." : skill.listed && skill.price > 0n ? "立即购买" : "等待上架"}
+                        {isPending ? "Processing..." : skill.listed && skill.price > 0n ? "Buy now" : "Awaiting listing"}
                       </button>
                     )}
 
                     {isCreator && !isOwner && (
-                      <p className="text-[10px] text-info mt-1">提示：你创建的技能包已转移给其他用户。</p>
+                      <p className="text-[10px] text-info mt-1">Note: you created this skill but it is owned by another account.</p>
                     )}
                   </div>
                 </article>
@@ -203,7 +218,7 @@ const ListControl = ({ tokenId, onList, disabled }: { tokenId: bigint; onList: (
         <EtherInput name="listPrice" value={value} onChange={setValue} placeholder="0.00" />
       </div>
       <button className="btn btn-primary btn-sm" type="button" disabled={disabled} onClick={() => onList(tokenId, value)}>
-        {disabled ? "处理中" : "上架"}
+        {disabled ? "Processing" : "List"}
       </button>
     </div>
   );

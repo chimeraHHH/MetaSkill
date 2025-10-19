@@ -14,6 +14,9 @@ export type SkillMetadata = {
   name?: string;
   description?: string;
   license?: string;
+  category?: string;
+  tags?: string[] | string;
+  keywords?: string[] | string;
   createdAt?: string;
   skill?: SkillMetadataFile;
   image?: string;
@@ -27,9 +30,15 @@ export type SkillItem = {
   tokenURI: string;
   listed: boolean;
   price: bigint;
+  priceEth: number;
   creator: string;
   owner: string;
   metadata?: SkillMetadata;
+  category?: string;
+  tags?: string[];
+  keywords?: string[];
+  createdTimestamp?: number;
+  popularityScore: number;
 };
 
 const resolveIpfsUrl = (uri: string) => {
@@ -87,6 +96,20 @@ const buildMediaUrl = (metadata?: SkillMetadata) => {
   return undefined;
 };
 
+const normalizeStringArray = (value: SkillMetadata["tags"] | SkillMetadata["keywords"]): string[] | undefined => {
+  if (!value) return undefined;
+  if (Array.isArray(value)) {
+    return value.map(item => item?.toString().trim()).filter(Boolean) as string[];
+  }
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map(part => part.trim())
+      .filter(Boolean);
+  }
+  return undefined;
+};
+
 export const useSkillsData = () => {
   const { data: contract } = useScaffoldContract({ contractName: "SkillNFT" });
   const { data: mintEvents, isLoading: loadingEvents } = useScaffoldEventHistory({
@@ -132,18 +155,46 @@ export const useSkillsData = () => {
             const owner = res[4] as string;
 
             const metadata = await loadMetadata(tokenURI);
+            let category: string | undefined;
+            let tags: string[] | undefined;
+            let keywords: string[] | undefined;
+            let createdTimestamp: number | undefined;
             if (metadata) {
               metadata.mediaUrl = buildMediaUrl(metadata);
+              if (metadata.category && typeof metadata.category === "string") {
+                category = metadata.category.trim();
+              }
+              tags = normalizeStringArray(metadata.tags);
+              keywords = normalizeStringArray(metadata.keywords);
+              if (metadata.createdAt) {
+                const ts = Date.parse(metadata.createdAt);
+                if (!Number.isNaN(ts)) {
+                  createdTimestamp = ts;
+                }
+              }
             }
+
+            const priceEth = Number(price) / 1e18;
+            const popularityScore =
+              (listed ? 100 : 0) +
+              (tags?.length ?? 0) * 10 +
+              (keywords?.length ?? 0) * 5 +
+              (metadata?.description ? Math.min(metadata.description.length, 600) / 20 : 0);
 
             return {
               tokenId,
               tokenURI,
               listed,
               price,
+              priceEth,
               creator,
               owner,
               metadata,
+              category,
+              tags,
+              keywords,
+              createdTimestamp,
+              popularityScore,
             } satisfies SkillItem;
           } catch (innerError) {
             console.warn(`Failed to hydrate token ${tokenId.toString()}`, innerError);
@@ -152,9 +203,15 @@ export const useSkillsData = () => {
               tokenURI: "",
               listed: false,
               price: 0n,
+              priceEth: 0,
               creator: "",
               owner: "",
               metadata: undefined,
+              category: undefined,
+              tags: undefined,
+              keywords: undefined,
+              createdTimestamp: undefined,
+              popularityScore: 0,
             } satisfies SkillItem;
           }
         }),
@@ -190,12 +247,22 @@ export const useSkillsData = () => {
     };
   }, [contract, tokenIds, refresh]);
 
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    skills.forEach(skill => {
+      if (skill.category) {
+        set.add(skill.category);
+      }
+    });
+    return Array.from(set.values());
+  }, [skills]);
+
   return {
     skills,
     loading: loading || loadingEvents,
     error,
     refresh,
     hasSkills: tokenIds.length > 0,
+    categories,
   };
 };
-
