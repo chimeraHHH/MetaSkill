@@ -257,8 +257,10 @@ const SearchPage: NextPage = () => {
       <header className="border-b border-base-300 bg-base-100/60 backdrop-blur sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold">Skill Search</h1>
-            <p className="text-sm opacity-70">寻找合适的技能并在几秒内完成链上购买。</p>
+            <div className="flex items-center gap-3 mb-6">
+            <img src="/logo.svg" alt="MetaSkill" className="h-28 w-auto" />
+            <span className="text-2xl font-semibold">Skill Search</span>
+          </div>
           </div>
           <div className="flex items-center gap-3">
             <button

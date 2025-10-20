@@ -43,7 +43,7 @@ const ProfilePage: NextPage = () => {
     return (
       <div className="min-h-screen bg-base-200 flex flex-col items-center justify-center gap-6">
         <h1 className="text-3xl font-bold">Connect your wallet</h1>
-        <p className="text-sm opacity-70">Your wallet address becomes your SkillChain profile.</p>
+        <p className="text-sm opacity-70">Your wallet address becomes your MetaSkill profile.</p>
         <RainbowKitCustomConnectButton />
       </div>
     );

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-const STORAGE_KEY = "skillchain:search-history";
+const STORAGE_KEY = "metaskill:search-history";
 const MAX_HISTORY = 10;
 
 const readHistory = (): string[] => {

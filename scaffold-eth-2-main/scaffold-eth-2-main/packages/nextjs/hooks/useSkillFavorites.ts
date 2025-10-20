@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-const STORAGE_KEY = "skillchain:favorites";
+const STORAGE_KEY = "metaskill:favorites";
 
 const loadInitial = (): string[] => {
   if (typeof window === "undefined") return [];

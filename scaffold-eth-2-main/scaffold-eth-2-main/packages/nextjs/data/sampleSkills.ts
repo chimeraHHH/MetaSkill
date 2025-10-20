@@ -100,6 +100,131 @@ export const SAMPLE_SKILLS: SkillItem[] = [
       keywords: ["security", "audit", "solidity"],
       license: "商业授权",
       createdAt: "2024-07-20T12:00:00.000Z",
+      claude: {
+        name: "Solidity 安全审计助手",
+        description: "在不执行真实审计的前提下，展示标准化的审计报告结构、风险分类与修复建议模板。",
+        version: "1.0.0",
+        author: "MetaSkill Labs",
+        license: "商业授权",
+        tags: ["Solidity", "Security", "Audit", "Foundry", "Slither"],
+        requirements: [
+          "Foundry (forge) 环境可用",
+          "Slither 已安装",
+          "Solc 0.8.x 编译通过",
+          "Node.js >= 20",
+          "代码可编译并通过基础单元测试"
+        ],
+        parameters: [
+          {
+            name: "contract_source",
+            type: "string",
+            description: "Solidity 源码或仓库 URL",
+            required: true,
+            pattern: "^(https?:\\/\\/|git@|src\\/).*"
+          },
+          {
+            name: "chain",
+            type: "string",
+            description: "目标网络",
+            required: false,
+            enum: ["ethereum", "arbitrum", "optimism", "bnb", "polygon"]
+          },
+          {
+            name: "audit_level",
+            type: "string",
+            description: "审计深度等级",
+            required: false,
+            enum: ["quick", "standard", "deep"],
+            default: "standard"
+          },
+          {
+            name: "report_format",
+            type: "string",
+            description: "报告输出格式",
+            enum: ["markdown", "pdf", "json"],
+            default: "markdown"
+          },
+          {
+            name: "focus_areas",
+            type: "array",
+            description: "重点扫描范围",
+            enum: [
+              "reentrancy",
+              "access-control",
+              "integer-overflow",
+              "tx-origin",
+              "front-running",
+              "dos",
+              "gas-inefficiency"
+            ]
+          },
+          {
+            name: "allowlist_patterns",
+            type: "array",
+            description: "允许的正则匹配模式 (白名单)",
+            default: []
+          }
+        ],
+        examples: [
+          {
+            title: "快速审计单文件",
+            description: "针对单个合约进行快速检测，并输出 Markdown 风险摘要",
+            input: {
+              contract_source: "src/Token.sol",
+              audit_level: "quick",
+              report_format: "markdown",
+              focus_areas: ["reentrancy", "access-control"]
+            },
+            output: {
+              summary: "发现 2 个中风险、1 个低风险，建议添加重入保护与角色权限校验",
+              issues: [
+                {
+                  id: "R-001",
+                  type: "Reentrancy",
+                  severity: "medium",
+                  location: "Token.sol:transfer()",
+                  fix: "在外部调用前后使用 Checks-Effects-Interactions 模式或引入 ReentrancyGuard"
+                },
+                {
+                  id: "A-002",
+                  type: "AccessControl",
+                  severity: "medium",
+                  location: "Token.sol:mint()",
+                  fix: "引入角色权限 (Ownable/AccessControl) 并限制仅管理员可调用"
+                }
+              ]
+            },
+            tags: ["markdown", "quick"],
+            explanation: "展示审计报告的典型结构：摘要、问题列表与修复建议"
+          },
+          {
+            title: "标准审计多文件项目",
+            description: "对仓库进行标准深度审计，输出 JSON 报告",
+            input: {
+              contract_source: "https://github.com/example/defi-protocol",
+              chain: "ethereum",
+              audit_level: "standard",
+              report_format: "json",
+              focus_areas: ["integer-overflow", "front-running", "dos"]
+            },
+            output: {
+              summary: "发现 1 个高风险、3 个中风险，建议添加边界检查与订单撮合保护",
+              stats: { files: 12, functions: 86, slitherFindings: 14 },
+              highRisk: [
+                {
+                  id: "O-101",
+                  type: "IntegerOverflow",
+                  location: "MathLib.sol:safeAdd()",
+                  fix: "使用 Solidity 0.8.x 默认溢出检查或使用 OpenZeppelin SafeMath"
+                }
+              ]
+            },
+            tags: ["json", "standard"],
+            explanation: "展示复杂项目的审计结构与统计信息"
+          }
+        ]
+      },
+      rawContent: "# Solidity 安全审计助手 (Claude Skill)\n\n目标：在不执行真实审计的前提下，展示审计报告结构、风险分类与修复建议模板。\n包含：参数说明、示例输入输出、报告目录、常见风险。\n\n> 此条目为演示用途，不包含链上交互。",
       mediaUrl:
         "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=1200&q=80",
     },

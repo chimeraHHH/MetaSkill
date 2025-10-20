@@ -195,7 +195,10 @@ const CreateSkillPage: NextPage = () => {
     <div className="max-w-6xl mx-auto px-6 py-10">
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">创建技能包</h1>
+          <div className="flex items-center gap-4 mb-6">
+          <img src="/logo.svg" alt="MetaSkill" className="h-30 w-auto" />
+          <span className="text-3xl font-bold">创建技能包</span>
+        </div>
           <p className="text-sm opacity-70 mt-1">上传技能说明与资源，设置价格，铸造为链上 NFT。</p>
         </div>
         <RainbowKitCustomConnectButton />

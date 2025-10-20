@@ -36,7 +36,7 @@ contract SkillNFT is ERC721, Ownable {
     event SkillUnlisted(address indexed owner, uint256 indexed tokenId);
     event SkillPurchased(address indexed seller, address indexed buyer, uint256 indexed tokenId, uint256 price);
 
-    constructor() ERC721("SkillChain Skill", "SKILL") Ownable(msg.sender) {}
+    constructor() ERC721("MetaSkill Skill", "SKILL") Ownable(msg.sender) {}
 
     /**
      * @notice Mint a new Skill NFT.

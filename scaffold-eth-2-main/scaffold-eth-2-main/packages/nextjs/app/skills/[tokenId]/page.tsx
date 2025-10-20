@@ -12,6 +12,9 @@ import { useSkillFavorites } from "~~/hooks/useSkillFavorites";
 import { useSkillsData } from "~~/hooks/useSkillsData";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
+import { SAMPLE_SKILLS } from "~~/data/sampleSkills";
+import { SkillPreview } from "~~/components/SkillPreview";
+import type { SkillItem } from "~~/hooks/useSkillsData";
 
 const SkillDetailPage: NextPage = () => {
   const params = useParams<{ tokenId: string }>();
@@ -29,10 +32,19 @@ const SkillDetailPage: NextPage = () => {
   const { isFavorite, toggleFavorite } = useSkillFavorites();
   const { writeContractAsync, isPending } = useScaffoldWriteContract("SkillNFT");
 
+  const curatedSkills = useMemo(() => {
+    const map = new Map<string, SkillItem>();
+    [...skills, ...SAMPLE_SKILLS].forEach(item => {
+      const key = item.tokenId.toString();
+      if (!map.has(key)) map.set(key, item);
+    });
+    return Array.from(map.values());
+  }, [skills]);
+
   const skill = useMemo(() => {
     if (!tokenId) return undefined;
-    return skills.find(item => item.tokenId === tokenId || item.tokenId.toString() === tokenId.toString());
-  }, [skills, tokenId]);
+    return curatedSkills.find(item => item.tokenId === tokenId || item.tokenId.toString() === tokenId.toString());
+  }, [curatedSkills, tokenId]);
 
   const mediaUrl = skill?.metadata?.mediaUrl;
   const isVideo = mediaUrl ? mediaUrl.startsWith("data:video") || mediaUrl.includes(".mp4") : false;
@@ -136,6 +148,12 @@ const SkillDetailPage: NextPage = () => {
             </div>
           </div>
 
+          {skill.metadata?.claude && (
+            <div className="bg-base-100 rounded-2xl shadow p-6">
+              <SkillPreview metadata={skill.metadata.claude} rawContent={skill.metadata.rawContent} />
+            </div>
+          )}
+
           {skill.metadata?.skill?.base64 && skill.metadata.skill.type && (
             <div className="bg-base-100 rounded-2xl shadow p-6 space-y-3">
               <h3 className="text-xl font-semibold">技能资源</h3>
@@ -154,20 +172,32 @@ const SkillDetailPage: NextPage = () => {
         <aside className="space-y-6">
           <div className="bg-base-100 rounded-3xl shadow p-6 space-y-4">
             <div className="flex items-center gap-3">
-              <BlockieAvatar address={skill.creator} size={48} />
+              {skill.isDemo ? (
+                <div className="w-12 h-12 rounded-full bg-base-200 flex items-center justify-center text-xs">DEMO</div>
+              ) : (
+                <BlockieAvatar address={skill.creator} size={48} />
+              )}
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-semibold">创作者</h3>
                   <CheckBadgeIcon className="w-5 h-5 text-primary" />
                 </div>
-                <Address address={skill.creator} format="short" />
+                {skill.isDemo ? (
+                  <span className="text-sm">Demo Creator</span>
+                ) : (
+                  <Address address={skill.creator} format="short" />
+                )}
                 <p className="text-xs opacity-70">链上发布者，信誉良好</p>
               </div>
             </div>
             <div className="bg-base-200 rounded-2xl p-4 space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span>当前持有人</span>
-                <Address address={skill.owner} format="short" />
+                {skill.isDemo ? (
+                  <span>Demo Owner</span>
+                ) : (
+                  <Address address={skill.owner} format="short" />
+                )}
               </div>
               <div className="flex items-center justify-between">
                 <span>Token ID</span>
@@ -180,27 +210,35 @@ const SkillDetailPage: NextPage = () => {
             </div>
 
             <div className="space-y-3">
-              <div className="text-3xl font-bold">
-                {skill.listed && skill.price > 0n ? `${formatEther(skill.price)} ETH` : "免费"}
-              </div>
-              <button
-                className="btn btn-primary w-full"
-                type="button"
-                disabled={isPending || isOwner || !skill.listed || skill.price <= 0n}
-                onClick={handlePurchase}
-              >
-                {isOwner ? "你已拥有" : isPending ? "处理中..." : skill.listed && skill.price > 0n ? "立即购买" : "等待上架"}
-              </button>
-              <div className="flex items-center justify-between text-xs opacity-70">
-                <span>加入收藏</span>
-                <span>已有 {isFavorite(skill.tokenId) ? "1" : "0"} 人收藏</span>
-              </div>
-              <div className="flex items-center justify-between text-xs opacity-70">
-                <span>评分</span>
-                <button className="btn btn-xs" type="button" disabled>
-                  <StarIcon className="w-4 h-4" /> 即将开放
-                </button>
-              </div>
+              {skill.isDemo ? (
+                <div className="bg-base-200 rounded-2xl p-4 text-sm opacity-80">
+                  此为演示技能包，前端展示内容与 Claude Skills 对齐，暂无链上购买功能。
+                </div>
+              ) : (
+                <>
+                  <div className="text-3xl font-bold">
+                    {skill.listed && skill.price > 0n ? `${formatEther(skill.price)} ETH` : "免费"}
+                  </div>
+                  <button
+                    className="btn btn-primary w-full"
+                    type="button"
+                    disabled={isPending || isOwner || !skill.listed || skill.price <= 0n}
+                    onClick={handlePurchase}
+                  >
+                    {isOwner ? "你已拥有" : isPending ? "处理中..." : skill.listed && skill.price > 0n ? "立即购买" : "等待上架"}
+                  </button>
+                  <div className="flex items-center justify-between text-xs opacity-70">
+                    <span>加入收藏</span>
+                    <span>已有 {isFavorite(skill.tokenId) ? "1" : "0"} 人收藏</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs opacity-70">
+                    <span>评分</span>
+                    <button className="btn btn-xs" type="button" disabled>
+                      <StarIcon className="w-4 h-4" /> 即将开放
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -208,7 +246,7 @@ const SkillDetailPage: NextPage = () => {
             <h4 className="text-base font-semibold">交易提醒</h4>
             <ul className="list-disc list-inside space-y-2">
               <li>所有交易将通过连接的钱包签名并上链执行。</li>
-              <li>SkillChain 不收取额外手续费，款项直接进入创作者账户。</li>
+              <li>MetaSkill 不收取额外手续费，款项直接进入创作者账户。</li>
               <li>购买后可在「个人主页 - 购买记录」中随时查看。</li>
             </ul>
           </div>

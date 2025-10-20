@@ -45,8 +45,7 @@ const Home: NextPage = () => {
       <header className="border-b border-base-300 bg-base-100/60 backdrop-blur sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">MetaSkill</h1>
-            <p className="text-sm opacity-70">去中心化 AI 技能市场</p>
+            <img src="/logo.svg" alt="MetaSkill" className="h-32 w-auto" />
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -105,7 +104,7 @@ const Home: NextPage = () => {
         <section className="mb-16">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h3 className="text-2xl font-semibold">SkillChain 功能中心</h3>
+              <h3 className="text-2xl font-semibold">MetaSkill 功能中心</h3>
               <p className="text-sm opacity-70 mt-1">在这里管理技能包的全流程：创建、上链、浏览、交易与收藏</p>
             </div>
           </div>
@@ -162,7 +161,7 @@ const Home: NextPage = () => {
 
       <footer className="border-t border-base-300 bg-base-100/70 mt-16">
         <div className="max-w-6xl mx-auto px-6 py-6 text-sm flex flex-col md:flex-row items-center justify-between gap-3">
-          <span>© {new Date().getFullYear()} SkillChain. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} MetaSkill. All rights reserved.</span>
           <span className="opacity-70">当前登录：{address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "未连接"}</span>
         </div>
       </footer>

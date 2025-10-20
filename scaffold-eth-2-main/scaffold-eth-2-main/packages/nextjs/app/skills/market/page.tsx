@@ -9,6 +9,7 @@ import { EtherInput, RainbowKitCustomConnectButton } from "~~/components/scaffol
 import { useSkillFavorites } from "~~/hooks/useSkillFavorites";
 import { SkillItem, useSkillsData } from "~~/hooks/useSkillsData";
 import { SkillCard } from "~~/components/SkillCard";
+import { SAMPLE_SKILLS } from "~~/data/sampleSkills";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
 
@@ -26,10 +27,18 @@ const MarketPage: NextPage = () => {
   const { writeContractAsync, isPending } = useScaffoldWriteContract("SkillNFT");
   const [showListedOnly, setShowListedOnly] = useState(false);
 
-  const filtered = useMemo(() => {
-    if (!showListedOnly) return skills;
-    return skills.filter(skill => skill.listed && skill.price > 0n);
-  }, [skills, showListedOnly]);
+  const curatedSkills = useMemo(() => {
+    const map = new Map<string, SkillItem>();
+    [...skills, ...SAMPLE_SKILLS].forEach(skill => {
+      const key = skill.tokenId.toString();
+      if (!map.has(key)) {
+        map.set(key, skill);
+      }
+    });
+    return Array.from(map.values());
+  }, [skills]);
+
+  const filtered = useMemo(() => curatedSkills.slice(0, 6), [curatedSkills]);
 
   const handlePurchase = async (skill: SkillItem) => {
     if (!skill.listed || skill.price <= 0n) {
@@ -73,46 +82,25 @@ const MarketPage: NextPage = () => {
       <header className="border-b border-base-300 bg-base-100/70 backdrop-blur sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Skill marketplace</h1>
-            <p className="text-sm opacity-70">Browse, collect and trade on-chain skills.</p>
+            <div className="flex items-center gap-3 mb-6">
+          <img src="/logo.svg" alt="MetaSkill" className="h-28 w-auto" />
+          <span className="text-2xl font-bold">灵感广场</span>
+        </div>
           </div>
           <RainbowKitCustomConnectButton />
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-10">
-        <div className="bg-base-100 rounded-2xl shadow-sm p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <div>
-            <h2 className="text-xl font-semibold mb-1">On-chain trading hub</h2>
-            <p className="text-sm opacity-70">Collect favourites, buy instantly and let creators set the price.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <label className="label cursor-pointer gap-2">
-              <span className="label-text">Only listed</span>
-              <input
-                type="checkbox"
-                className="toggle toggle-primary"
-                checked={showListedOnly}
-                onChange={event => setShowListedOnly(event.target.checked)}
-              />
-            </label>
-            <Link href="/search" className="btn btn-outline btn-sm">
-              Advanced search
-            </Link>
-          </div>
-        </div>
+
 
         {loading ? (
           <div className="flex justify-center py-20">
             <span className="loading loading-lg loading-spinner" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-base-100 border border-dashed border-base-300 rounded-2xl py-16 text-center">
-            <p className="text-base font-medium mb-2">No skills found</p>
-            <p className="text-sm opacity-70">Create a new skill or adjust your filters.</p>
-            <Link href="/skills/create" className="btn btn-primary btn-sm mt-4">
-              Create a skill
-            </Link>
+          <div className="rounded-2xl border border-dashed border-base-300 py-16 text-center text-sm opacity-70">
+            还没有技能被发布，快去创建一个吧~
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -126,42 +114,6 @@ const MarketPage: NextPage = () => {
                   href={`/skills/${skill.tokenId.toString()}`}
                   isFavorite={isFavorite(skill.tokenId)}
                   onToggleFavorite={() => toggleFavorite(skill.tokenId)}
-                  showCreator={true}
-                  showPrice={true}
-                  extra={(
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className={`badge ${skill.listed ? "badge-primary" : "badge-ghost"}`}>
-                          {skill.listed ? formatPrice(skill.priceEth) : "Not listed"}
-                        </div>
-                        <Link href={`/skills/${skill.tokenId.toString()}`} className="btn btn-link btn-xs">
-                          View details
-                        </Link>
-                      </div>
-                      {isOwner ? (
-                        skill.listed ? (
-                          <button className="btn btn-warning btn-sm" type="button" disabled={isPending} onClick={() => handleUnlist(skill.tokenId)}>
-                            {isPending ? "Processing..." : "Unlist"}
-                          </button>
-                        ) : (
-                          <ListControl tokenId={skill.tokenId} onList={handleList} disabled={isPending} />
-                        )
-                      ) : (
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          type="button"
-                          disabled={isPending || !skill.listed || skill.price <= 0n}
-                          onClick={() => handlePurchase(skill)}
-                        >
-                          {isPending ? "Processing..." : skill.listed && skill.price > 0n ? "Buy now" : "Awaiting listing"}
-                        </button>
-                      )}
-
-                      {isCreator && !isOwner && (
-                        <p className="text-[10px] text-info mt-1">Note: you created this skill but it is owned by another account.</p>
-                      )}
-                    </div>
-                  )}
                 />
               );
             })}

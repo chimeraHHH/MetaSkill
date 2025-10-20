@@ -5,7 +5,10 @@ import Link from "next/link";
 const SkillsIndex = () => {
   return (
     <div className="max-w-3xl mx-auto p-8 space-y-6">
-      <h1 className="text-4xl font-bold">SkillChain 功能中心</h1>
+      <div className="flex items-center gap-4 mb-4">
+          <img src="/logo.svg" alt="MetaSkill" className="h-32 w-auto" />
+          <span className="text-4xl font-bold">功能中心</span>
+        </div>
       <p className="opacity-80">在这里管理技能包的全流程：创建、上链、浏览、交易与收藏。</p>
       <div className="grid gap-4 md:grid-cols-2">
         <Link href="/skills/create" className="card bg-base-100 shadow hover:shadow-lg transition">
