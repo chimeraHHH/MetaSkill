@@ -32,7 +32,7 @@ MetaSkill 是 **基于 AI (Claude) + Web3 区块链的 AI Skill 交易市场**�
 ## 🛠 功能模块
 ### 1️⃣ AI Skill 创建与展示
 - 上传 AI Skill  
-- 记录技能功能  
+- 展示独一无二的Skill功能  
 
 ### 2️⃣ AI Skill 市场
 - 技能交易
