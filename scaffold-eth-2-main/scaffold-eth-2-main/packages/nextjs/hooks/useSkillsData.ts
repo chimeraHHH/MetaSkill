@@ -39,6 +39,7 @@ export type SkillItem = {
   keywords?: string[];
   createdTimestamp?: number;
   popularityScore: number;
+  isDemo?: boolean;
 };
 
 const resolveIpfsUrl = (uri: string) => {
@@ -195,6 +196,7 @@ export const useSkillsData = () => {
               keywords,
               createdTimestamp,
               popularityScore,
+              isDemo: false,
             } satisfies SkillItem;
           } catch (innerError) {
             console.warn(`Failed to hydrate token ${tokenId.toString()}`, innerError);
@@ -212,6 +214,7 @@ export const useSkillsData = () => {
               keywords: undefined,
               createdTimestamp: undefined,
               popularityScore: 0,
+              isDemo: false,
             } satisfies SkillItem;
           }
         }),

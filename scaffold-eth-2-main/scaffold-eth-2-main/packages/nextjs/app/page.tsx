@@ -9,6 +9,8 @@ import { BookmarkIcon, HeartIcon, LanguageIcon, MagnifyingGlassIcon, PlayIcon } 
 import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useSkillFavorites } from "~~/hooks/useSkillFavorites";
 import { useSkillsData } from "~~/hooks/useSkillsData";
+import type { SkillItem } from "~~/hooks/useSkillsData";
+import { SAMPLE_SKILLS } from "~~/data/sampleSkills";
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -18,7 +20,18 @@ const Home: NextPage = () => {
   const { skills, loading } = useSkillsData();
   const { isFavorite, toggleFavorite } = useSkillFavorites();
 
-  const inspiration = useMemo(() => skills.slice(0, 6), [skills]);
+  const curatedSkills = useMemo(() => {
+    const map = new Map<string, SkillItem>();
+    [...skills, ...SAMPLE_SKILLS].forEach(skill => {
+      const key = skill.tokenId.toString();
+      if (!map.has(key)) {
+        map.set(key, skill);
+      }
+    });
+    return Array.from(map.values());
+  }, [skills]);
+
+  const inspiration = useMemo(() => curatedSkills.slice(0, 6), [curatedSkills]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +93,7 @@ const Home: NextPage = () => {
             <h3 className="text-2xl font-semibold">灵感广场</h3>
             <button className="btn btn-link" type="button" onClick={() => router.push("/skills/market")}>前往市场</button>
           </div>
-          {loading ? (
+          {loading && skills.length === 0 ? (
             <div className="flex justify-center py-16">
               <span className="loading loading-spinner loading-lg" />
             </div>
@@ -117,6 +130,7 @@ const Home: NextPage = () => {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <h4 className="card-title text-lg">{skill.metadata?.name ?? `Skill #${skill.tokenId.toString()}`}</h4>
+                        {skill.isDemo ? <span className="badge badge-info badge-sm mt-1">示例技能包</span> : null}
                         <p className="text-sm opacity-70 line-clamp-2">
                           {skill.metadata?.description ?? "创作者还没有添加描述。"}
                         </p>

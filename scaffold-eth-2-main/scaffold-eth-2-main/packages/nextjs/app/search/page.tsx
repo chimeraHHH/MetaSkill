@@ -9,6 +9,7 @@ import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useSkillFavorites } from "~~/hooks/useSkillFavorites";
 import { useSearchHistory } from "~~/hooks/useSearchHistory";
 import { SkillItem, useSkillsData } from "~~/hooks/useSkillsData";
+import { SAMPLE_SKILLS } from "~~/data/sampleSkills";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
 
@@ -96,7 +97,7 @@ const SearchPage: NextPage = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   const { history, addSearchTerm, removeHistoryItem, clearHistory } = useSearchHistory();
-  const { skills, loading, refresh, categories } = useSkillsData();
+  const { skills, loading, refresh } = useSkillsData();
   const { isFavorite, toggleFavorite } = useSkillFavorites();
   const { writeContractAsync, isPending } = useScaffoldWriteContract("SkillNFT");
 
@@ -141,10 +142,29 @@ const SearchPage: NextPage = () => {
     return parsed + 24 * 60 * 60 * 1000 - 1;
   }, [createdEnd]);
 
-  const availableCategories = useMemo(() => [...categories].sort((a, b) => a.localeCompare(b)), [categories]);
+  const allSkills = useMemo(() => {
+    const map = new Map<string, SkillItem>();
+    [...skills, ...SAMPLE_SKILLS].forEach(skill => {
+      const key = skill.tokenId.toString();
+      if (!map.has(key)) {
+        map.set(key, skill);
+      }
+    });
+    return Array.from(map.values());
+  }, [skills]);
+
+  const availableCategories = useMemo(() => {
+    const set = new Set<string>();
+    allSkills.forEach(skill => {
+      if (skill.category) {
+        set.add(skill.category);
+      }
+    });
+    return Array.from(set.values()).sort((a, b) => a.localeCompare(b));
+  }, [allSkills]);
 
   const filtered = useMemo(() => {
-    return skills.filter(skill => {
+    return allSkills.filter(skill => {
       if (!matchesSearchTerms(skill, searchTerms)) return false;
 
       if (statusFilter === "listed" && !skill.listed) return false;
@@ -173,7 +193,7 @@ const SearchPage: NextPage = () => {
 
       return true;
     });
-  }, [skills, searchTerms, statusFilter, selectedCategories, minPriceValue, maxPriceValue, startTimestamp, endTimestamp]);
+  }, [allSkills, searchTerms, statusFilter, selectedCategories, minPriceValue, maxPriceValue, startTimestamp, endTimestamp]);
 
   const displayed = useMemo(() => sortSkills(filtered, sortOption), [filtered, sortOption]);
 
@@ -211,6 +231,10 @@ const SearchPage: NextPage = () => {
   };
 
   const quickBuy = async (skill: SkillItem) => {
+    if (skill.isDemo) {
+      notification.info("这是示例技能包，用于演示体验，无法直接购买。");
+      return;
+    }
     if (!skill.listed || skill.price <= 0n) {
       notification.info("This skill is not listed right now");
       return;
@@ -426,7 +450,7 @@ const SearchPage: NextPage = () => {
           </Link>
         </div>
 
-        {loading ? (
+        {loading && skills.length === 0 ? (
           <div className="flex justify-center py-20">
             <span className="loading loading-lg loading-spinner" />
           </div>
@@ -465,6 +489,7 @@ const SearchPage: NextPage = () => {
                               {CATEGORY_LABELS[skill.category] ?? skill.category}
                             </span>
                           )}
+                          {skill.isDemo ? <span className="badge badge-info badge-outline">示例</span> : null}
                         </div>
                         <p className="text-sm opacity-70 line-clamp-2">
                           {skill.metadata?.description ?? "Creator has not provided additional details yet."}
@@ -506,9 +531,15 @@ const SearchPage: NextPage = () => {
                       className="btn btn-secondary btn-sm w-full"
                       type="button"
                       onClick={() => quickBuy(skill)}
-                      disabled={isPending || !skill.listed || skill.price <= 0n}
+                      disabled={isPending || skill.isDemo || !skill.listed || skill.price <= 0n}
                     >
-                      {isPending ? "Processing..." : skill.listed && skill.price > 0n ? "Quick buy" : "Awaiting listing"}
+                      {skill.isDemo
+                        ? "示例展示"
+                        : isPending
+                          ? "Processing..."
+                          : skill.listed && skill.price > 0n
+                            ? "Quick buy"
+                            : "Awaiting listing"}
                     </button>
                   </div>
                 </div>
