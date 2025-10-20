@@ -76,7 +76,7 @@ MetaSkill 是 **基于 AI (Claude) + Web3 区块链的 AI Skill 交易市场**�
 
 5. **技能数字资产化不足**  
    - 现有技能无法成为可流通资产。  
-   - MetaSkill 使 AI Skill 可上链、交易、租赁和增值，真正成为数字资产。
+   - MetaSkill 使 AI Skill 可上链、交易和增值，真正成为数字资产。
 
 
 ---
