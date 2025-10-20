@@ -9,7 +9,7 @@
 
 ## 🌟 项目概览
 MetaSkill 是 **基于 AI (Claude) + Web3 区块链的 AI Skill 交易市场**，  
-为 AI 技能提供 **创建、交易、与激励** 的完整生态。  
+为 AI 技能提供 **创建、交易与激励** 的完整生态。  
 
 在 MetaSkill，你可以：
 - 将 AI Skill 变成可交易的数字资产  
