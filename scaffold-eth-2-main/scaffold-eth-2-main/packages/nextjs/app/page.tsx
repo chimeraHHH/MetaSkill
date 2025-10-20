@@ -11,6 +11,7 @@ import { useSkillFavorites } from "~~/hooks/useSkillFavorites";
 import { useSkillsData } from "~~/hooks/useSkillsData";
 import type { SkillItem } from "~~/hooks/useSkillsData";
 import { SAMPLE_SKILLS } from "~~/data/sampleSkills";
+import { SkillCard } from "~~/components/SkillCard";
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -70,22 +71,7 @@ const Home: NextPage = () => {
           <p className="text-base opacity-80 max-w-2xl mx-auto">
             MetaSkill 让每个创作者把 AI 能力资产化，用户可以随时浏览灵感广场，搜索想要的技能包，或通过链上交易快速获取。
           </p>
-          <form onSubmit={handleSearch} className="max-w-3xl mx-auto flex gap-3">
-            <div className="flex-1 join">
-              <span className="join-item btn btn-square btn-ghost pointer-events-none">
-                <MagnifyingGlassIcon className="w-5 h-5" />
-              </span>
-              <input
-                className="input input-bordered join-item w-full"
-                placeholder="搜索 Meta Skill"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <button className="btn btn-primary" type="submit">
-              开始探索
-            </button>
-          </form>
+
         </section>
 
         <section className="mb-16">
@@ -103,63 +89,15 @@ const Home: NextPage = () => {
             </div>
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {inspiration.map(skill => {
-                const mediaUrl = skill.metadata?.mediaUrl;
-                const isVideo = mediaUrl ? mediaUrl.startsWith("data:video") || mediaUrl.includes(".mp4") : false;
-                return (
-                  <article
-                    key={skill.tokenId.toString()}
-                    className="card bg-base-100 shadow hover:shadow-xl transition cursor-pointer"
-                    onClick={() => router.push(`/skills/${skill.tokenId.toString()}`)}
-                  >
-                  <figure className="h-48 overflow-hidden bg-base-200">
-                    {mediaUrl ? (
-                      isVideo ? (
-                        <video src={mediaUrl} className="w-full h-full object-cover" autoPlay loop muted />
-                      ) : (
-                        <img src={mediaUrl} alt={skill.metadata?.name ?? "Skill preview"} className="w-full h-full object-cover" />
-                      )
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-sm opacity-70">
-                        <PlayIcon className="w-10 h-10" />
-                        暂无预览
-                      </div>
-                    )}
-                  </figure>
-                  <div className="card-body gap-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h4 className="card-title text-lg">{skill.metadata?.name ?? `Skill #${skill.tokenId.toString()}`}</h4>
-                        {skill.isDemo ? <span className="badge badge-info badge-sm mt-1">示例技能包</span> : null}
-                        <p className="text-sm opacity-70 line-clamp-2">
-                          {skill.metadata?.description ?? "创作者还没有添加描述。"}
-                        </p>
-                      </div>
-                      <button
-                        className={`btn btn-ghost btn-sm ${isFavorite(skill.tokenId) ? "text-error" : ""}`}
-                        onClick={event => {
-                          event.stopPropagation();
-                          toggleFavorite(skill.tokenId);
-                        }}
-                        type="button"
-                        aria-label="收藏技能包"
-                      >
-                        <HeartIcon className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="badge badge-outline">
-                        {skill.listed && skill.price > 0n ? `${formatEther(skill.price)} ETH` : "自由体验"}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs opacity-70">
-                        <BookmarkIcon className="w-4 h-4" />
-                        <span>创作者：{`${skill.creator.slice(0, 6)}...${skill.creator.slice(-4)}`}</span>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-                );
-              })}
+              {inspiration.map(skill => (
+                <SkillCard
+                  key={skill.tokenId.toString()}
+                  skill={skill}
+                  href={`/skills/${skill.tokenId.toString()}`}
+                  isFavorite={isFavorite(skill.tokenId)}
+                  onToggleFavorite={() => toggleFavorite(skill.tokenId)}
+                />
+              ))}
             </div>
           )}
         </section>

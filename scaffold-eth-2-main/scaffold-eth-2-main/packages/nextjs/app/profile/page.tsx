@@ -8,6 +8,7 @@ import { BookOpenIcon, HeartIcon } from "@heroicons/react/24/outline";
 import { Address, BlockieAvatar, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useSkillFavorites } from "~~/hooks/useSkillFavorites";
 import { SkillItem, useSkillsData } from "~~/hooks/useSkillsData";
+import { SkillCard } from "~~/components/SkillCard";
 
 const formatPrice = (value: number) => {
   if (!value) return "Free";
@@ -146,41 +147,15 @@ const SectionBlock = ({ title, subtitle, emptyText, loading, skills, isFavorite,
       ) : (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {skills.map(skill => (
-            <article key={skill.tokenId.toString()} className="card bg-base-200/60 border border-base-300">
-              <Link href={`/skills/${skill.tokenId.toString()}`} className="block">
-                <figure className="h-40 overflow-hidden bg-base-200">
-                  {skill.metadata?.mediaUrl ? (
-                    skill.metadata.mediaUrl.startsWith("data:video") || skill.metadata.mediaUrl.includes(".mp4") ? (
-                      <video src={skill.metadata.mediaUrl} className="w-full h-full object-cover" autoPlay loop muted />
-                    ) : (
-                      <img src={skill.metadata.mediaUrl} alt={skill.metadata?.name ?? "Skill preview"} className="w-full h-full object-cover" />
-                    )
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs opacity-60">No preview</div>
-                  )}
-                </figure>
-              </Link>
-              <div className="card-body gap-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h4 className="card-title text-base">{skill.metadata?.name ?? `Skill #${skill.tokenId.toString()}`}</h4>
-                    <p className="text-xs opacity-70 line-clamp-2">
-                      {skill.metadata?.description ?? "Creator has not provided extra details."}
-                    </p>
-                  </div>
-                  <button
-                    className={`btn btn-ghost btn-xs ${isFavorite(skill.tokenId) ? "text-error" : ""}`}
-                    onClick={() => toggleFavorite(skill.tokenId)}
-                    type="button"
-                    aria-label="Toggle favourite"
-                  >
-                    <HeartIcon className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="flex items-center justify-between text-xs opacity-70">
-                  <span>Creator: {`${skill.creator.slice(0, 6)}...${skill.creator.slice(-4)}`}</span>
-                  <span>Owner: {`${skill.owner.slice(0, 6)}...${skill.owner.slice(-4)}`}</span>
-                </div>
+            <SkillCard
+              key={skill.tokenId.toString()}
+              skill={skill}
+              href={`/skills/${skill.tokenId.toString()}`}
+              isFavorite={isFavorite(skill.tokenId)}
+              onToggleFavorite={() => toggleFavorite(skill.tokenId)}
+              showCreator={true}
+              showPrice={true}
+              extra={(
                 <div className="flex items-center justify-between">
                   <span className={`badge ${skill.listed ? "badge-primary" : "badge-ghost"}`}>
                     {skill.listed ? formatPrice(skill.priceEth) : "Not listed"}
@@ -189,8 +164,8 @@ const SectionBlock = ({ title, subtitle, emptyText, loading, skills, isFavorite,
                     View details
                   </Link>
                 </div>
-              </div>
-            </article>
+              )}
+            />
           ))}
         </div>
       )}

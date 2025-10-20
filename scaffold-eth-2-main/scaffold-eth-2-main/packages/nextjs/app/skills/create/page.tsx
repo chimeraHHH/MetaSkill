@@ -192,22 +192,25 @@ const CreateSkillPage: NextPage = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Create Skill</h1>
+    <div className="max-w-6xl mx-auto px-6 py-10">
+      <div className="flex items-start justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">创建技能包</h1>
+          <p className="text-sm opacity-70 mt-1">上传技能说明与资源，设置价格，铸造为链上 NFT。</p>
+        </div>
         <RainbowKitCustomConnectButton />
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* 左侧：表单 */}
-        <div className="space-y-6">
+        {/* 左侧：表单卡片 */}
+        <section className="card bg-base-100 shadow p-6 space-y-4">
           <form className="space-y-4" onSubmit={onSubmit}>
             <div className="form-control">
               <label className="label">
                 <span className="label-text">技能名称 *</span>
               </label>
               <input 
-                className="input input-bordered" 
+                className="input input-bordered w-full" 
                 value={name} 
                 onChange={e => setName(e.target.value)} 
                 placeholder="例如：图像描述生成" 
@@ -220,7 +223,7 @@ const CreateSkillPage: NextPage = () => {
                 <span className="label-text">技能描述</span>
               </label>
               <textarea 
-                className="textarea textarea-bordered" 
+                className="textarea textarea-bordered w-full" 
                 rows={4} 
                 value={description} 
                 onChange={e => setDescription(e.target.value)} 
@@ -233,7 +236,7 @@ const CreateSkillPage: NextPage = () => {
                 <span className="label-text">许可证</span>
               </label>
               <input 
-                className="input input-bordered" 
+                className="input input-bordered w-full" 
                 value={license} 
                 onChange={e => setLicense(e.target.value)} 
                 placeholder="例如：CC-BY-4.0" 
@@ -244,16 +247,18 @@ const CreateSkillPage: NextPage = () => {
               <label className="label">
                 <span className="label-text">价格 (ETH)</span>
               </label>
-              <EtherInput 
-                name="price" 
-                value={priceEth} 
-                onChange={setPriceEth} 
-                placeholder="0.00" 
-              />
+              <div className="w-full">
+                <EtherInput 
+                  name="price" 
+                  value={priceEth} 
+                  onChange={setPriceEth} 
+                  placeholder="0.00" 
+                />
+              </div>
             </div>
             
             <button 
-              className="btn btn-primary w-full" 
+              className="btn btn-primary btn-lg w-full" 
               type="submit" 
               disabled={isPending || uploading || (file && validationResult && !validationResult.isValid)}
             >
@@ -263,7 +268,7 @@ const CreateSkillPage: NextPage = () => {
                   处理中...
                 </>
               ) : (
-                "创建技能"
+                "立即创建"
               )}
             </button>
           </form>
@@ -272,32 +277,29 @@ const CreateSkillPage: NextPage = () => {
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-            <span className="text-sm">
-              如果未配置 IPFS，元数据将存储为 data URI，仅用于本地演示。
-            </span>
+            <span className="text-sm">未配置 IPFS 时，元数据将以 data URI 形式保存，仅用于本地演示。</span>
           </div>
-        </div>
+        </section>
 
-        {/* 右侧：文件上传和预览 */}
-        <div className="space-y-6">
-          <div>
+        {/* 右侧：上传与预览卡片（置顶保持可见） */}
+        <div className="space-y-6 lg:sticky lg:top-24">
+          <section className="card bg-base-100 shadow p-6">
             <h2 className="text-xl font-semibold mb-4">技能文件上传</h2>
             <SkillFileUpload
               onFileSelect={handleFileSelect}
               onValidationResult={handleValidationResult}
               disabled={uploading || isPending}
             />
-          </div>
+          </section>
           
-          {/* 技能预览 */}
           {validationResult?.isValid && validationResult.metadata && (
-            <div>
+            <section className="card bg-base-100 shadow p-6">
               <h2 className="text-xl font-semibold mb-4">技能预览</h2>
               <SkillPreview
                 metadata={validationResult.metadata}
                 rawContent={rawFileContent}
               />
-            </div>
+            </section>
           )}
         </div>
       </div>

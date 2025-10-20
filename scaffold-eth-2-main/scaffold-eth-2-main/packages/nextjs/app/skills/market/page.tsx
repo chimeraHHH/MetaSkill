@@ -8,6 +8,7 @@ import { TagIcon } from "@heroicons/react/24/outline";
 import { EtherInput, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useSkillFavorites } from "~~/hooks/useSkillFavorites";
 import { SkillItem, useSkillsData } from "~~/hooks/useSkillsData";
+import { SkillCard } from "~~/components/SkillCard";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
 
@@ -116,91 +117,52 @@ const MarketPage: NextPage = () => {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {filtered.map(skill => {
-              const mediaUrl = skill.metadata?.mediaUrl;
-              const isVideo = mediaUrl ? mediaUrl.startsWith("data:video") || mediaUrl.includes(".mp4") : false;
               const isOwner = address && skill.owner?.toLowerCase() === address.toLowerCase();
               const isCreator = address && skill.creator?.toLowerCase() === address.toLowerCase();
               return (
-                <article key={skill.tokenId.toString()} className="card bg-base-100 shadow-md hover:shadow-xl transition">
-                  <figure className="h-48 overflow-hidden bg-base-200">
-                    <Link href={`/skills/${skill.tokenId.toString()}`} className="block w-full h-full">
-                      {mediaUrl ? (
-                        isVideo ? (
-                          <video src={mediaUrl} className="w-full h-full object-cover" autoPlay loop muted />
+                <SkillCard
+                  key={skill.tokenId.toString()}
+                  skill={skill}
+                  href={`/skills/${skill.tokenId.toString()}`}
+                  isFavorite={isFavorite(skill.tokenId)}
+                  onToggleFavorite={() => toggleFavorite(skill.tokenId)}
+                  showCreator={true}
+                  showPrice={true}
+                  extra={(
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className={`badge ${skill.listed ? "badge-primary" : "badge-ghost"}`}>
+                          {skill.listed ? formatPrice(skill.priceEth) : "Not listed"}
+                        </div>
+                        <Link href={`/skills/${skill.tokenId.toString()}`} className="btn btn-link btn-xs">
+                          View details
+                        </Link>
+                      </div>
+                      {isOwner ? (
+                        skill.listed ? (
+                          <button className="btn btn-warning btn-sm" type="button" disabled={isPending} onClick={() => handleUnlist(skill.tokenId)}>
+                            {isPending ? "Processing..." : "Unlist"}
+                          </button>
                         ) : (
-                          <img src={mediaUrl} alt={skill.metadata?.name ?? "Skill preview"} className="w-full h-full object-cover" />
+                          <ListControl tokenId={skill.tokenId} onList={handleList} disabled={isPending} />
                         )
                       ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-sm opacity-70">
-                          <TagIcon className="w-8 h-8" />
-                          No preview
-                        </div>
-                      )}
-                    </Link>
-                  </figure>
-                  <div className="card-body gap-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="card-title text-lg">{skill.metadata?.name ?? `Skill #${skill.tokenId.toString()}`}</h3>
-                        <p className="text-sm opacity-70 line-clamp-2">
-                          {skill.metadata?.description ?? "Creator has not provided a description yet."}
-                        </p>
-                      </div>
-                      <button
-                        className={`btn btn-ghost btn-sm ${isFavorite(skill.tokenId) ? "text-error" : ""}`}
-                        onClick={() => toggleFavorite(skill.tokenId)}
-                        type="button"
-                        aria-label="Toggle favourite"
-                      >
-                        ❤
-                      </button>
-                    </div>
-
-                    {skill.tags?.length ? (
-                      <div className="flex flex-wrap gap-2">
-                        {skill.tags.slice(0, 4).map(tag => (
-                          <span key={tag} className="badge badge-ghost badge-sm">#{tag}</span>
-                        ))}
-                      </div>
-                    ) : null}
-
-                    <div className="flex items-center justify-between text-xs opacity-70">
-                      <span>Creator: {`${skill.creator.slice(0, 6)}...${skill.creator.slice(-4)}`}</span>
-                      <span>Owner: {`${skill.owner.slice(0, 6)}...${skill.owner.slice(-4)}`}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className={`badge ${skill.listed ? "badge-primary" : "badge-ghost"}`}>
-                        {skill.listed ? formatPrice(skill.priceEth) : "Not listed"}
-                      </div>
-                      <Link href={`/skills/${skill.tokenId.toString()}`} className="btn btn-link btn-xs">
-                        View details
-                      </Link>
-                    </div>
-
-                    {isOwner ? (
-                      skill.listed ? (
-                        <button className="btn btn-warning btn-sm" type="button" disabled={isPending} onClick={() => handleUnlist(skill.tokenId)}>
-                          {isPending ? "Processing..." : "Unlist"}
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          type="button"
+                          disabled={isPending || !skill.listed || skill.price <= 0n}
+                          onClick={() => handlePurchase(skill)}
+                        >
+                          {isPending ? "Processing..." : skill.listed && skill.price > 0n ? "Buy now" : "Awaiting listing"}
                         </button>
-                      ) : (
-                        <ListControl tokenId={skill.tokenId} onList={handleList} disabled={isPending} />
-                      )
-                    ) : (
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        type="button"
-                        disabled={isPending || !skill.listed || skill.price <= 0n}
-                        onClick={() => handlePurchase(skill)}
-                      >
-                        {isPending ? "Processing..." : skill.listed && skill.price > 0n ? "Buy now" : "Awaiting listing"}
-                      </button>
-                    )}
+                      )}
 
-                    {isCreator && !isOwner && (
-                      <p className="text-[10px] text-info mt-1">Note: you created this skill but it is owned by another account.</p>
-                    )}
-                  </div>
-                </article>
+                      {isCreator && !isOwner && (
+                        <p className="text-[10px] text-info mt-1">Note: you created this skill but it is owned by another account.</p>
+                      )}
+                    </div>
+                  )}
+                />
               );
             })}
           </div>

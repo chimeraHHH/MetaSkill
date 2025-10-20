@@ -26,4 +26,16 @@ if (isIpfs) {
   };
 }
 
+// 统一配置远程图片域名与 IPFS 网关，避免 ORB 问题并允许 Next/Image 加载
+nextConfig.images = {
+  ...(nextConfig.images ?? {}),
+  remotePatterns: [
+    { protocol: "https", hostname: "images.unsplash.com" },
+    { protocol: "https", hostname: "ipfs.io", pathname: "/ipfs/**" },
+    { protocol: "https", hostname: "gateway.pinata.cloud", pathname: "/ipfs/**" },
+    { protocol: "https", hostname: "cloudflare-ipfs.com", pathname: "/ipfs/**" },
+    { protocol: "https", hostname: "nftstorage.link", pathname: "/ipfs/**" },
+  ],
+};
+
 module.exports = nextConfig;
