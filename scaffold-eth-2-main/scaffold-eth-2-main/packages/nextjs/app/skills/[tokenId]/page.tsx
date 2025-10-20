@@ -149,8 +149,83 @@ const SkillDetailPage: NextPage = () => {
           </div>
 
           {skill.metadata?.claude && (
-            <div className="bg-base-100 rounded-2xl shadow p-6">
+            <div className="bg-base-100 rounded-3xl shadow p-6 space-y-8">
               <SkillPreview metadata={skill.metadata.claude} rawContent={skill.metadata.rawContent} />
+
+              {/* 能力亮点统计 */}
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="bg-base-200 rounded-2xl p-4 text-center">
+                  <div className="text-3xl font-bold">80+</div>
+                  <div className="text-sm opacity-70">覆盖漏洞类型</div>
+                </div>
+                <div className="bg-base-200 rounded-2xl p-4 text-center">
+                  <div className="text-3xl font-bold">3</div>
+                  <div className="text-sm opacity-70">报告格式 (MD/PDF/JSON)</div>
+                </div>
+                <div className="bg-base-200 rounded-2xl p-4 text-center">
+                  <div className="text-3xl font-bold">5+</div>
+                  <div className="text-sm opacity-70">支持网络 (ETH/ARB/OP/BNB/Polygon)</div>
+                </div>
+                <div className="bg-base-200 rounded-2xl p-4 text-center">
+                  <div className="text-3xl font-bold">14</div>
+                  <div className="text-sm opacity-70">示例覆盖与统计项</div>
+                </div>
+              </div>
+
+              {/* 审计能力亮点 */}
+              <div className="space-y-3">
+                <h3 className="text-xl font-semibold">审计能力亮点</h3>
+                <div className="flex flex-wrap gap-2">
+                  <span className="badge badge-primary badge-outline">Foundry/Slither 集成</span>
+                  <span className="badge badge-primary badge-outline">自动生成修复建议</span>
+                  <span className="badge badge-primary badge-outline">可定制扫描范围</span>
+                  <span className="badge badge-primary badge-outline">Solc 0.8.x 兼容</span>
+                  <span className="badge badge-primary badge-outline">多链适配</span>
+                </div>
+              </div>
+
+              {/* 覆盖矩阵 */}
+              <div className="space-y-3">
+                <h3 className="text-xl font-semibold">覆盖矩阵</h3>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {[
+                    '重入 (Reentrancy)',
+                    '权限控制 (Access Control)',
+                    '整数溢出/下溢',
+                    'Front-running',
+                    'DoS 与可用性',
+                    'Gas 低效 / 微优化',
+                    '时间操纵',
+                    '外部依赖风险',
+                    '输入校验缺失',
+                  ].map((label, idx) => (
+                    <div key={idx} className="bg-base-200 rounded-2xl p-3 flex items-center justify-between">
+                      <span className="text-sm">{label}</span>
+                      <span className="badge badge-success badge-outline">覆盖</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 工作流 */}
+              <div className="space-y-3">
+                <h3 className="text-xl font-semibold">审计工作流</h3>
+                <ol className="list-decimal list-inside space-y-1 text-sm opacity-80">
+                  <li>代码准备与依赖安装 (Foundry/Slither)</li>
+                  <li>静态扫描与规则匹配 (可定制覆盖范围)</li>
+                  <li>动态仿真与边界条件检查</li>
+                  <li>生成结构化报告与修复建议</li>
+                  <li>复检与变更确认</li>
+                </ol>
+              </div>
+
+              {/* 报告片段示例 */}
+              <div className="space-y-3">
+                <h3 className="text-xl font-semibold">报告片段示例</h3>
+                <pre className="p-4 bg-base-200 rounded-2xl text-xs whitespace-pre-wrap">
+{`# Summary\n- 高风险: 1 (IntegerOverflow: MathLib.sol:safeAdd)\n- 中风险: 3 (Reentrancy, AccessControl, Front-running)\n\n# Finding R-001 (Reentrancy)\n- Location: Token.sol:transfer()\n- Fix: 使用 Checks-Effects-Interactions 或引入 ReentrancyGuard\n\n# Finding A-002 (AccessControl)\n- Location: Token.sol:mint()\n- Fix: 引入 Ownable/AccessControl 限制调用者角色`}
+                </pre>
+              </div>
             </div>
           )}
 
