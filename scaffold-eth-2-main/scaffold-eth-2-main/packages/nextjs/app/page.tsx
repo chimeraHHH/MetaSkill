@@ -164,26 +164,59 @@ const Home: NextPage = () => {
           )}
         </section>
 
-        <section className="grid gap-6 md:grid-cols-3">
-          <div className="card bg-base-100 shadow">
-            <div className="card-body">
-              <h4 className="card-title">创建者中心</h4>
-              <p className="text-sm opacity-80">把你的 AI 技能打包上链，立即开放售卖或免费分享，让更多人看到你的创意。</p>
-              <button className="btn btn-primary btn-sm" type="button" onClick={() => router.push("/skills/create")}>上传技能包</button>
+        <section className="mb-16">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-2xl font-semibold">SkillChain 功能中心</h3>
+              <p className="text-sm opacity-70 mt-1">在这里管理技能包的全流程：创建、上链、浏览、交易与收藏</p>
             </div>
           </div>
-          <div className="card bg-base-100 shadow">
-            <div className="card-body">
-              <h4 className="card-title">灵感探索</h4>
-              <p className="text-sm opacity-80">逛逛灵感广场或搜索关键词，系统会自动推荐与你兴趣相关的技能包。</p>
-              <button className="btn btn-outline btn-sm" type="button" onClick={() => router.push("/search")}>试一试搜索</button>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div
+              className="card bg-base-100 shadow hover:shadow-lg transition cursor-pointer"
+              role="button"
+              tabIndex={0}
+              onClick={() => router.push("/skills/create")}
+              onKeyDown={e => {
+                if (e.key === "Enter" || e.key === " ") router.push("/skills/create");
+              }}
+            >
+              <div className="card-body">
+                <h4 className="card-title text-lg">创建技能包</h4>
+                <p className="text-sm opacity-70">上传技能说明与资源并设置价格，铸造为链上 NFT。</p>
+                <button
+                  className="btn btn-primary btn-sm mt-4"
+                  type="button"
+                  onClick={e => {
+                    e.stopPropagation();
+                    console.log("创建技能包按钮被点击");
+                    router.push("/skills/create");
+                  }}
+                >
+                  立即创建
+                </button>
+              </div>
             </div>
-          </div>
-          <div className="card bg-base-100 shadow">
-            <div className="card-body">
-              <h4 className="card-title">个人主页</h4>
-              <p className="text-sm opacity-80">管理你的创作、收藏与购买记录，构建独一无二的区块链名片。</p>
-              <button className="btn btn-outline btn-sm" type="button" onClick={() => router.push("/profile")}>前往主页</button>
+            <div className="card bg-base-100 shadow hover:shadow-lg transition">
+              <div className="card-body">
+                <h4 className="card-title text-lg">浏览市场</h4>
+                <p className="text-sm opacity-70">逛逛灵感广场，快速收藏或购买热门技能包。</p>
+                <button className="btn btn-secondary btn-sm mt-4" type="button" onClick={() => router.push("/skills/market")}>进入市场</button>
+              </div>
+            </div>
+            <div className="card bg-base-100 shadow hover:shadow-lg transition">
+              <div className="card-body">
+                <h4 className="card-title text-lg">技能搜索</h4>
+                <p className="text-sm opacity-70">按关键词、热度或价格排序，精准定位你想要的技能。</p>
+                <button className="btn btn-outline btn-sm mt-4" type="button" onClick={() => router.push("/search")}>开始搜索</button>
+              </div>
+            </div>
+            <div className="card bg-base-100 shadow hover:shadow-lg transition">
+              <div className="card-body">
+                <h4 className="card-title text-lg">个人主页</h4>
+                <p className="text-sm opacity-70">管理你的创作、收藏与购买记录，打造链上名片。</p>
+                <button className="btn btn-outline btn-sm mt-4" type="button" onClick={() => router.push("/profile")}>查看主页</button>
+              </div>
             </div>
           </div>
         </section>

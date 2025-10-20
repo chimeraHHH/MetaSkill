@@ -1,31 +1,26 @@
-"use client";
-
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useScaffoldContract, useScaffoldEventHistory } from "~~/hooks/scaffold-eth";
 
-export type SkillMetadataFile = {
-  name?: string;
-  type?: string;
-  size?: number;
-  base64?: string;
-};
-
-export type SkillMetadata = {
+export interface SkillMetadataFile {
   name?: string;
   description?: string;
-  license?: string;
-  category?: string;
-  tags?: string[] | string;
-  keywords?: string[] | string;
-  createdAt?: string;
-  skill?: SkillMetadataFile;
   image?: string;
+  external_url?: string;
   animation_url?: string;
-  mediaUrl?: string;
-  [key: string]: unknown;
-};
+  background_color?: string;
+  youtube_url?: string;
+  category?: string;
+  tags?: string | string[];
+  keywords?: string | string[];
+  createdAt?: string;
+  [key: string]: any;
+}
 
-export type SkillItem = {
+export interface SkillMetadata extends SkillMetadataFile {
+  mediaUrl?: string;
+}
+
+export interface SkillItem {
   tokenId: bigint;
   tokenURI: string;
   listed: boolean;
@@ -39,80 +34,77 @@ export type SkillItem = {
   keywords?: string[];
   createdTimestamp?: number;
   popularityScore: number;
-  isDemo?: boolean;
-};
+  isDemo: boolean;
+}
 
-const resolveIpfsUrl = (uri: string) => {
-  if (!uri) return uri;
-  return uri.startsWith("ipfs://") ? `https://ipfs.io/ipfs/${uri.replace("ipfs://", "")}` : uri;
-};
+function resolveIpfsUrl(url: string): string {
+  if (url.startsWith("ipfs://")) {
+    return `https://ipfs.io/ipfs/${url.slice(7)}`;
+  }
+  return url;
+}
 
-const parseDataUriJson = (uri: string): Record<string, unknown> | undefined => {
+function parseDataUriJson(uri: string): any {
+  if (uri.startsWith("data:application/json;base64,")) {
+    const base64 = uri.slice("data:application/json;base64,".length);
+    const json = atob(base64);
+    return JSON.parse(json);
+  }
+  if (uri.startsWith("data:application/json,")) {
+    const json = decodeURIComponent(uri.slice("data:application/json,".length));
+    return JSON.parse(json);
+  }
+  return null;
+}
+
+async function loadMetadata(tokenURI: string): Promise<SkillMetadata | undefined> {
+  if (!tokenURI) return undefined;
+
   try {
-    const [meta, data] = uri.split(",", 2);
-    if (!data) return undefined;
-    if (meta.includes(";base64")) {
-      if (typeof atob !== "undefined") {
-        return JSON.parse(atob(data));
-      }
+    const dataUriJson = parseDataUriJson(tokenURI);
+    if (dataUriJson) {
+      return dataUriJson as SkillMetadata;
+    }
+
+    const url = resolveIpfsUrl(tokenURI);
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.warn(`Failed to fetch metadata from ${url}: ${response.status}`);
       return undefined;
     }
-    return JSON.parse(decodeURIComponent(data));
+    return (await response.json()) as SkillMetadata;
   } catch (error) {
-    console.warn("Failed to parse data URI metadata", error);
+    console.warn(`Failed to load metadata from ${tokenURI}:`, error);
     return undefined;
   }
-};
+}
 
-const loadMetadata = async (tokenURI: string): Promise<SkillMetadata | undefined> => {
-  try {
-    if (!tokenURI) return undefined;
-    if (tokenURI.startsWith("data:")) {
-      return parseDataUriJson(tokenURI) as SkillMetadata | undefined;
-    }
-
-    const resolved = resolveIpfsUrl(tokenURI);
-    const res = await fetch(resolved);
-    if (!res.ok) throw new Error(`Failed to fetch metadata ${res.status}`);
-    return (await res.json()) as SkillMetadata;
-  } catch (error) {
-    console.warn("Unable to load metadata", tokenURI, error);
-    return undefined;
-  }
-};
-
-const buildMediaUrl = (metadata?: SkillMetadata) => {
-  if (!metadata) return undefined;
-  if (metadata.mediaUrl) return metadata.mediaUrl;
-
+function buildMediaUrl(metadata: SkillMetadata): string | undefined {
   if (metadata.animation_url) {
     return resolveIpfsUrl(metadata.animation_url);
   }
   if (metadata.image) {
     return resolveIpfsUrl(metadata.image);
   }
-  if (metadata.skill?.base64 && metadata.skill?.type) {
-    return `data:${metadata.skill.type};base64,${metadata.skill.base64}`;
-  }
   return undefined;
-};
+}
 
-const normalizeStringArray = (value: SkillMetadata["tags"] | SkillMetadata["keywords"]): string[] | undefined => {
+function normalizeStringArray(value: string | string[] | undefined): string[] | undefined {
   if (!value) return undefined;
-  if (Array.isArray(value)) {
-    return value.map(item => item?.toString().trim()).filter(Boolean) as string[];
-  }
   if (typeof value === "string") {
-    return value
-      .split(",")
-      .map(part => part.trim())
-      .filter(Boolean);
+    return value.split(",").map(s => s.trim()).filter(Boolean);
+  }
+  if (Array.isArray(value)) {
+    return value.map(s => String(s).trim()).filter(Boolean);
   }
   return undefined;
-};
+}
 
 export const useSkillsData = () => {
-  const { data: contract } = useScaffoldContract({ contractName: "SkillNFT" });
+  const { data: contract } = useScaffoldContract({
+    contractName: "SkillNFT",
+  });
+
   const { data: mintEvents, isLoading: loadingEvents } = useScaffoldEventHistory({
     contractName: "SkillNFT",
     eventName: "SkillMinted",
@@ -120,9 +112,23 @@ export const useSkillsData = () => {
     filters: {},
   });
 
+  // 新增：稳定的地址字符串与contract引用
+  const contractAddress = useMemo(() => {
+    try {
+      const addr = (contract as any)?.address ?? "";
+      return typeof addr === "string" ? addr.toLowerCase() : String(addr ?? "");
+    } catch {
+      return "";
+    }
+  }, [contract]);
+  const contractRef = useRef<any>(contract);
+  useEffect(() => {
+    contractRef.current = contract;
+  }, [contract]);
+
   const [skills, setSkills] = useState<SkillItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
+  const [isLoadingSkills, setIsLoadingSkills] = useState(false);
 
   const tokenIds = useMemo(() => {
     const ids = new Map<string, bigint>();
@@ -132,23 +138,27 @@ export const useSkillsData = () => {
         ids.set(tokenId.toString(), tokenId);
       }
     });
-    // Latest minted first
     return Array.from(ids.values()).sort((a, b) => Number(b - a));
   }, [mintEvents]);
 
-  const refresh = useCallback(async () => {
-    if (!contract || tokenIds.length === 0) {
+  const tokenIdsKey = useMemo(() => tokenIds.map(id => id.toString()).join(","), [tokenIds]);
+
+  // 修改：loadSkillsData依赖稳定的contractAddress与tokenIdsKey
+  const loadSkillsData = useCallback(async () => {
+    const c = contractRef.current;
+    if (!c || tokenIds.length === 0) {
       setSkills([]);
-      setLoading(false);
       return;
     }
 
-    setLoading(true);
+    setIsLoadingSkills(true);
+    setError(undefined);
+
     try {
       const items: SkillItem[] = await Promise.all(
         tokenIds.map(async tokenId => {
           try {
-            const res = await (contract as any).read.getSkill([tokenId]);
+            const res = await (c as any).read.getSkill([tokenId]);
             const tokenURI = res[0] as string;
             const listed = res[1] as boolean;
             const price = res[2] as bigint;
@@ -221,48 +231,35 @@ export const useSkillsData = () => {
       );
 
       setSkills(items);
-      setError(undefined);
     } catch (err) {
-      console.error("Failed to refresh skills", err);
+      console.error("Failed to load skills", err);
       setError((err as Error)?.message ?? "Unknown error");
     } finally {
-      setLoading(false);
+      setIsLoadingSkills(false);
     }
-  }, [contract, tokenIds]);
+  }, [contractAddress, tokenIdsKey]);
 
   useEffect(() => {
-    let cancelled = false;
-    const execute = async () => {
-      if (!contract) {
-        setSkills([]);
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      await refresh();
-      if (!cancelled) {
-        setLoading(false);
-      }
-    };
-    execute();
-    return () => {
-      cancelled = true;
-    };
-  }, [contract, tokenIds, refresh]);
+    loadSkillsData();
+  }, [loadSkillsData]);
+
+  const refresh = useCallback(() => {
+    loadSkillsData();
+  }, [loadSkillsData]);
 
   const categories = useMemo(() => {
-    const set = new Set<string>();
+    const categorySet = new Set<string>();
     skills.forEach(skill => {
       if (skill.category) {
-        set.add(skill.category);
+        categorySet.add(skill.category);
       }
     });
-    return Array.from(set.values());
+    return Array.from(categorySet).sort();
   }, [skills]);
 
   return {
     skills,
-    loading: loading || loadingEvents,
+    loading: loadingEvents || isLoadingSkills,
     error,
     refresh,
     hasSkills: tokenIds.length > 0,
